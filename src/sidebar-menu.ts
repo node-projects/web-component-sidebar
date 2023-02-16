@@ -3,14 +3,17 @@ import { dom } from "@fortawesome/fontawesome-svg-core";
 
 export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyReady {
     static readonly style = css`
+
+        * {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
         .sidebar {
             height: 100%;
             width: 80px;
             background-color: #21333D;
             display: flex;
             flex-direction: column;
-
-            // transition: width 0.15s;
         }
 
         .sidebar-cell-icon > svg {
@@ -28,15 +31,19 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
             cursor: pointer;
         }
 
-        // .sidebar-cell[hidden=false] > sidebar-cell-icon {
-        //     width: 100%;
-        //     height: 100%;
-        // }
+        .sidebar-cell * {
+            pointer-events: none;
+        }
+
+        .sidebar-cell:hover {
+            background-color: #2E4A5A;
+        }
 
         .sidebar-cell-icon {
             width: 80px;
             height: 80px;
         }
+
         .sidebar-cell-text {
             flex-grow: 1;
             font-size: 1.2em;
@@ -47,8 +54,7 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
         #overlay {
             position: absolute;
             background-color: #21333D;
-            min-width: 200px;
-            // height: 100%;
+            min-width: 230px;
             border-left: 3px solid #2E4A5A;
             display: flex;
             flex-direction: column;
@@ -67,7 +73,6 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
 
         .sidebar-cell-selected {
             background-color: #2E4A5A;
-            // border-radius: 5px;
         }
     `;
 
@@ -81,13 +86,13 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
         <div class="sidebar-cell" style="height: 80px;">
             <div class="sidebar-cell-icon" id="icon">
             </div>
-            <div class="sidebar-cell-text" hidden id="content">
+            <div class="sidebar-cell-text" id="content">
             </div>
         </div>
     `;
 
     static readonly overlayRowTemplate = html`
-        <span id="sub-menu-content"></span>
+        <div class="sidebar-cell"></div>
     `;
 
     private sidebarWidth = { slim: 80, extended: 250 }
@@ -98,6 +103,9 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
     private sidebar: HTMLDivElement;
 
     private previoslySelected: HTMLElement;
+
+    private extendedDepth: number = 0;
+    private insetAmount: number = 10;
 
     constructor() {
         super();
@@ -146,6 +154,38 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
                 displayName: "MFlow",
                 icon: '<i class="fa-solid fa-pallet"></i>',
                 iconIsHtml: true,
+                children: [
+                    {
+                        id: "MVISU",
+                        displayName: "MVISU",
+                        children: [
+                            {
+                                id: "MVISU",
+                                displayName: "MVISU",
+                            },
+                            {
+                                id: "MVISU",
+                                displayName: "MVISU",
+                            },
+                            {
+                                id: "MVISU",
+                                displayName: "MVISU",
+                            },
+                            {
+                                id: "MVISU",
+                                displayName: "MVISU",
+                            },
+                        ]
+                    },
+                    {
+                        id: "MVISU",
+                        displayName: "MVISU",
+                    },
+                    {
+                        id: "MVISU",
+                        displayName: "MVISU",
+                    }
+                ]
             },
             {
                 id: "MWork",
@@ -165,12 +205,10 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
     ready() {
         this.sidebar = this._getDomElement<HTMLDivElement>('sidebar')
 
-        dom.i2svg({ node: this.sidebar })
-        dom.watch();
-
         this.buildMenuItems().forEach(el => this.sidebar.appendChild(el));
         this._getDomElements<HTMLElement>('.sidebar-cell').forEach(cell => {
-            cell.onclick = () => {
+            cell.onmouseenter = () => {
+                this.clearAllOverlays();
                 if (this.previoslySelected) this.previoslySelected.classList.remove('sidebar-cell-selected');
 
                 this.overlays[0].pinned = true;
@@ -185,18 +223,19 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
             element: this.sidebar,
             pinned: false,
             depth: 0,
+            mouseOver: false
         })
 
-        this.sidebar.onmouseover = () => this.mouseOverSidebar(true);
-        this.sidebar.onmouseout = () => this.mouseOverSidebar(false);
+        this.sidebar.onmouseenter = () => this.mouseOverSidebar(true);
+        this.sidebar.onmouseleave = () => this.mouseOverSidebar(false);
+
+        dom.i2svg({ node: this.sidebar })
+        dom.watch();
     }
 
-
     private mouseOverSidebar(isSlim: boolean = true) {
-        // this.sidebar.innerHTML = '';
-        // this.buildMenuItems().forEach(el => this.sidebar.appendChild(el));
-        if (this.overlays[0].pinned) return;
-        this.toggleDisplayNameVisibility();
+        // if (this.overlays[0].pinned) return;
+        // this.toggleDisplayNameVisibility();
         if (isSlim) {
             this.sidebar.style.width = this.sidebarWidth.extended + "px";
             return;
@@ -205,7 +244,6 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
     }
 
     private buildMenuItems(): HTMLElement[] {
-        // this.sidebar.innerHTML = '';
         if (!this.menuItems || this.menuItems.length === 0) return null;
         let cells = [];
         for (let item of this.menuItems) {
@@ -235,69 +273,90 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
     }
 
     private extendMenuItem(cell: HTMLElement) {
+        this.extendedDepth++;
 
         let item = cell["$item-data"];
         if (!item || !item.children || item.children.length === 0) return;
-
-        if (this.overlays.length > 0)
-            this.overlays[this.overlays.length].pinned = true;
 
         cell.classList.add('sidebar-cell-selected');
 
         let overlay = document.createElement('div');
         overlay.id = "overlay";
         let combinedWidth = 0;
-        this._getDomElements<HTMLDivElement>('#overlay').forEach(el => combinedWidth += el.getBoundingClientRect().width);
-        overlay.style.left = (combinedWidth + this.sidebarWidth.extended) + "px";
+        this._getDomElements<HTMLDivElement>('#overlay').forEach(el => combinedWidth += el.getBoundingClientRect().width - this.insetAmount);
+        overlay.style.left = (combinedWidth + this.sidebarWidth.extended - this.insetAmount) + "px";
 
         for (let child of item.children) {
-            let row = SidebarMenu.overlayRowTemplate.content.cloneNode(true) as HTMLElement;
-            let content = row.querySelector('#sub-menu-content') as HTMLElement;
+            let row = SidebarMenu.cellTemplate.content.cloneNode(true) as HTMLElement;
+            let content = row.querySelector('#content') as HTMLElement;
             content.innerHTML = child.displayName;
+            content.style.display = 'block';
 
-            content["$item-data"] = child;
-            content.onclick = () => { this.extendMenuItem(content); }
+            let sidebarCell = content.parentElement;
+            sidebarCell["$item-data"] = child;
+            sidebarCell.onmouseenter = () => { this.extendMenuItem(sidebarCell); }
             overlay.appendChild(row);
         }
 
         let overlayW: SideBarOverlayWrapper = {
             element: overlay,
             pinned: false,
-            depth: 0
+            depth: this.extendedDepth,
+            mouseOver: true,
         };
         this.overlays.push(overlayW);
 
-        overlayW.element.onmouseleave = () => { if (!overlayW.pinned) overlayW.element.remove(); }
+        overlayW.element.onmouseleave = () => { this.handleMouseLeaveOverlay(overlayW); }
         this.sidebar.appendChild(overlay);
     }
 
-    private toggleDisplayNameVisibility() {
-        // if(this.overlays[0].pinned) return;
-        let content = this._getDomElements<HTMLDivElement>('#content');
-        if (!content || content.length === 0) return;
-        for (let el of content) {
-            el.hidden = !el.hidden;
+    handleMouseLeaveOverlay(overlayLeft: SideBarOverlayWrapper) {
+        overlayLeft.mouseOver = false;
+
+        let noHover = true;
+        this.overlays.sort((a, b) => b.depth - a.depth);
+        for (let overlay of this.overlays) {
+            if (overlay.mouseOver) {
+                this.extendedDepth = overlay.depth;
+                noHover = false;
+                break;
+            }
+        }
+
+        if (noHover) this.extendedDepth = 0;
+
+        for (let i = this.overlays.length - 1; i >= 0; i--) {
+            if (this.extendedDepth >= this.overlays[i].depth || this.overlays[i].depth == 0) continue;
+            this.overlays[i].element.remove();
+            this.overlays.splice(i, 1);
+
+        }
+
+        // for (let overlay of this.overlays) {
+        //     if (overlay.depth == 0 || this.extendedDepth > overlay.depth) continue;
+        //     overlay.element.remove();
+        //     this.overlays.splice(this.overlays.indexOf(overlay), 1);
+        // }
+    }
+
+    // private toggleDisplayNameVisibility() {
+    //     let content = this._getDomElements<HTMLDivElement>('#content');
+    //     if (!content || content.length === 0) return;
+    //     for (let el of content) {
+    //         el.hidden = !el.hidden;
+    //     }
+    // }
+
+    private clearAllOverlays() {
+        // for(let i = this.overlays.length - 1; i > 0; i--){
+        //     this.overlays[i].element.remove();
+        //     this.overlays.splice(i, 1);
+        // }
+        for (let overlay of this.overlays) {
+            if (overlay.depth == 0) continue;
+            overlay.element.remove();
+            this.overlays.splice(this.overlays.indexOf(overlay), 1);
         }
     }
 }
 customElements.define("sidebar-menu", SidebarMenu);
-
-// export class 
-
-interface SideBarMenuChild {
-    id?: string;
-    displayName: string;
-    children?: SideBarMenuChild[];
-}
-
-interface SideBarMenuChildWithIcon extends SideBarMenuChild {
-    icon: string;
-    iconIsHtml?: boolean;
-    children?: SideBarMenuChild[];
-}
-
-interface SideBarOverlayWrapper {
-    element: HTMLElement;
-    pinned: boolean;
-    depth: number;
-}
