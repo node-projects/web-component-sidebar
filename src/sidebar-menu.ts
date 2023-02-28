@@ -1,362 +1,176 @@
-import { BaseCustomWebComponentConstructorAppendLazyReady, css, html } from "@node-projects/base-custom-webcomponent";
-import { dom } from "@fortawesome/fontawesome-svg-core";
+import { BaseCustomWebComponentConstructorAppendLazyReady, css, html, TypedEvent } from "@node-projects/base-custom-webcomponent";
 
 export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyReady {
     static readonly style = css`
-
-        * {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .sidebar {
+        nav.sidebar {
             height: 100%;
-            width: 80px;
+            min-width: 80px;
+            max-width: 250px;
             background-color: #21333D;
             display: flex;
             flex-direction: column;
         }
 
-        .sidebar-cell-icon > svg {
-            margin: 25px;
-            font-size: 1.5em;
-            color: #fff;
-        }
-
-        .sidebar-cell {
-            display: flex;
+        div.sidebar-cell {
+            display: grid;
+            grid-template-columns: 80px 1fr 20px;
+            padding-right: 10px;
             height: 80px;
-            width: 100%;
             align-items: center;
             justify-content: left;
             cursor: pointer;
+            color: white;
         }
 
-        .sidebar-cell * {
-            pointer-events: none;
-        }
-
-        .sidebar-cell:hover {
+        div.sidebar-cell:hover {
             background-color: #2E4A5A;
         }
 
-        .sidebar-cell-icon {
+        div.sidebar-cell-icon {
             width: 80px;
             height: 80px;
         }
 
-        .sidebar-cell-text {
-            flex-grow: 1;
-            font-size: 1.2em;
-            font-weight: bolder;
-            color: white;
+        div.sidebar-cell-text {
+            padding-right: 20px;
         }
 
-        #overlay {
+        div#subMenu {
             position: absolute;
             background-color: #21333D;
-            min-width: 230px;
+            // min-width: 230px;
             border-left: 3px solid #2E4A5A;
-            display: flex;
             flex-direction: column;
+            visibility: hidden;
         }
 
-        #sub-menu-content {
-            height: 80px;
-            padding: 0px 15px;
-            cursor: pointer;
-            font-size: 1.2em;
-            font-weight: bolder;
-            color: white;
-            display: flex;
-            align-items: center;
-        }
-
-        .sidebar-cell-selected {
-            background-color: #2E4A5A;
+        div#subMenu.sidebar-menu-visible {
+            visibility: visible;
         }
     `;
 
     static readonly template = html`
-        <div class="sidebar" id="sidebar">
-            
-        </div>
+        <nav id=sidebar class="sidebar"></nav>
     `;
 
-    static readonly cellTemplate = html`
-        <div class="sidebar-cell" style="height: 80px;">
-            <div class="sidebar-cell-icon" id="icon">
-            </div>
-            <div class="sidebar-cell-text" id="content">
-            </div>
-        </div>
-    `;
+    static readonly properties = {
+        menuItems: Object
+    }
 
-    static readonly overlayRowTemplate = html`
-        <div class="sidebar-cell"></div>
-    `;
+    public sidebarItemPressed = new TypedEvent<SideBarMenuChild>;
 
-    private sidebarWidth = { slim: 80, extended: 250 }
-
-    private menuItems: SideBarMenuChildWithIcon[] = [];
-    private overlays: SideBarOverlayWrapper[] = [];
-
+    public menuItems: SideBarMenuChildWithIcon[] = [];
     private sidebar: HTMLDivElement;
-
-    private previoslySelected: HTMLElement;
-
-    private extendedDepth: number = 0;
-    private insetAmount: number = 10;
 
     constructor() {
         super();
+        this._restoreCachedInititalValues();
+        this.collapseMenu = this.collapseMenu.bind(this);
+    }
 
-        this.menuItems = [
-            {
-                id: "WMS",
-                displayName: "WMS",
-                icon: '<i class="fa-solid fa-warehouse"></i>',
-                iconIsHtml: true,
-                children: [
-                    {
-                        id: "WMS1",
-                        displayName: "WMS1",
-                        children: [
-                            {
-                                id: "WMS1",
-                                displayName: "WMS1",
-                            },
-                            {
-                                id: "WMS2",
-                                displayName: "WMS2",
-                            },
-                            {
-                                id: "WMS3",
-                                displayName: "WMS3",
-                            },
-                            {
-                                id: "WMS4",
-                                displayName: "WMS4",
-                            },
-                        ]
-                    },
-                    {
-                        id: "WMS2",
-                        displayName: "WMS2",
-                    },
-                    {
-                        id: "WMS3",
-                        displayName: "WMS3",
-                    }
-                ]
-            },
-            {
-                id: "MFLOW",
-                displayName: "MFlow",
-                icon: '<i class="fa-solid fa-pallet"></i>',
-                iconIsHtml: true,
-                children: [
-                    {
-                        id: "MVISU",
-                        displayName: "MVISU",
-                        children: [
-                            {
-                                id: "MVISU",
-                                displayName: "MVISU",
-                            },
-                            {
-                                id: "MVISU",
-                                displayName: "MVISU",
-                            },
-                            {
-                                id: "MVISU",
-                                displayName: "MVISU",
-                            },
-                            {
-                                id: "MVISU",
-                                displayName: "MVISU",
-                            },
-                        ]
-                    },
-                    {
-                        id: "MVISU",
-                        displayName: "MVISU",
-                    },
-                    {
-                        id: "MVISU",
-                        displayName: "MVISU",
-                    }
-                ]
-            },
-            {
-                id: "MWork",
-                displayName: "MWork",
-                icon: '<i class="fa-solid fa-barcode"></i>',
-                iconIsHtml: true,
-            },
-            {
-                id: "Service",
-                displayName: "Service",
-                icon: '<i class="fa-solid fa-wrench"></i>',
-                iconIsHtml: true,
-            }
-        ]
+    connectedCallback() {
+        window.addEventListener("click", this.collapseMenu)
+    }
+
+    disconnectedCallback() {
+        window.removeEventListener("click", this.collapseMenu)
     }
 
     ready() {
-        this.sidebar = this._getDomElement<HTMLDivElement>('sidebar')
-
-        this.buildMenuItems().forEach(el => this.sidebar.appendChild(el));
-        this._getDomElements<HTMLElement>('.sidebar-cell').forEach(cell => {
-            cell.onmouseenter = () => {
-                this.clearAllOverlays();
-                if (this.previoslySelected) this.previoslySelected.classList.remove('sidebar-cell-selected');
-
-                this.overlays[0].pinned = true;
-                this.extendMenuItem(cell);
-
-                this.previoslySelected = cell;
-                cell.classList.add('sidebar-cell-selected');
-            }
-        });
-
-        this.overlays.push({
-            element: this.sidebar,
-            pinned: false,
-            depth: 0,
-            mouseOver: false
-        })
-
-        this.sidebar.onmouseenter = () => this.mouseOverSidebar(true);
-        this.sidebar.onmouseleave = () => this.mouseOverSidebar(false);
-
-        dom.i2svg({ node: this.sidebar })
-        dom.watch();
+        this._parseAttributesToProperties();
+        this.sidebar = this._getDomElement<HTMLDivElement>("sidebar");
+        this.buildMenu(this.menuItems, this.sidebar);
     }
 
-    private mouseOverSidebar(isSlim: boolean = true) {
-        // if (this.overlays[0].pinned) return;
-        // this.toggleDisplayNameVisibility();
-        if (isSlim) {
-            this.sidebar.style.width = this.sidebarWidth.extended + "px";
-            return;
+    buildMenu(menuItems: SideBarMenuChildWithIcon[], host: HTMLElement) {
+        for (let item of menuItems) {
+            host.appendChild(this.buildItem(item, 0))
         }
-        this.sidebar.style.width = this.sidebarWidth.slim + "px";
     }
 
-    private buildMenuItems(): HTMLElement[] {
-        if (!this.menuItems || this.menuItems.length === 0) return null;
-        let cells = [];
-        for (let item of this.menuItems) {
-            let cell = SidebarMenu.cellTemplate.content.cloneNode(true) as HTMLElement;
-            let icon = cell.querySelector('#icon');
+    private collapseMenu(event: MouseEvent) {
+        let elem = <HTMLElement>event.composedPath()[0];
+        if (this.isSubNodeOf(elem, this.sidebar)) {
 
-            if (item.iconIsHtml) {
-                icon.innerHTML = item.icon;
-            } else {
-                let img = document.createElement('img');
-                img.src = item.icon;
-                icon.appendChild(img);
-            }
-
-            let content = cell.querySelector('#content');
-            content.innerHTML = item.displayName;
-
-            dom.i2svg({ node: cell })
-            dom.watch();
-
-            cell.firstElementChild["$item-data"] = item;
-
-            cells.push(cell);
-        }
-
-        return cells;
-    }
-
-    private extendMenuItem(cell: HTMLElement) {
-        this.extendedDepth++;
-
-        let item = cell["$item-data"];
-        if (!item || !item.children || item.children.length === 0) return;
-
-        cell.classList.add('sidebar-cell-selected');
-
-        let overlay = document.createElement('div');
-        overlay.id = "overlay";
-        let combinedWidth = 0;
-        this._getDomElements<HTMLDivElement>('#overlay').forEach(el => combinedWidth += el.getBoundingClientRect().width - this.insetAmount);
-        overlay.style.left = (combinedWidth + this.sidebarWidth.extended - this.insetAmount) + "px";
-
-        for (let child of item.children) {
-            let row = SidebarMenu.cellTemplate.content.cloneNode(true) as HTMLElement;
-            let content = row.querySelector('#content') as HTMLElement;
-            content.innerHTML = child.displayName;
-            content.style.display = 'block';
-
-            let sidebarCell = content.parentElement;
-            sidebarCell["$item-data"] = child;
-            sidebarCell.onmouseenter = () => { this.extendMenuItem(sidebarCell); }
-            overlay.appendChild(row);
-        }
-
-        let overlayW: SideBarOverlayWrapper = {
-            element: overlay,
-            pinned: false,
-            depth: this.extendedDepth,
-            mouseOver: true,
-        };
-        this.overlays.push(overlayW);
-
-        overlayW.element.onmouseleave = () => { this.handleMouseLeaveOverlay(overlayW); }
-        this.sidebar.appendChild(overlay);
-    }
-
-    handleMouseLeaveOverlay(overlayLeft: SideBarOverlayWrapper) {
-        overlayLeft.mouseOver = false;
-
-        let noHover = true;
-        this.overlays.sort((a, b) => b.depth - a.depth);
-        for (let overlay of this.overlays) {
-            if (overlay.mouseOver) {
-                this.extendedDepth = overlay.depth;
-                noHover = false;
-                break;
+        } else {
+            let elements = this._getDomElements<HTMLElement>("div#subMenu");
+            for (let el of elements) {
+                el.classList.remove("sidebar-menu-visible");
             }
         }
-
-        if (noHover) this.extendedDepth = 0;
-
-        for (let i = this.overlays.length - 1; i >= 0; i--) {
-            if (this.extendedDepth >= this.overlays[i].depth || this.overlays[i].depth == 0) continue;
-            this.overlays[i].element.remove();
-            this.overlays.splice(i, 1);
-
-        }
-
-        // for (let overlay of this.overlays) {
-        //     if (overlay.depth == 0 || this.extendedDepth > overlay.depth) continue;
-        //     overlay.element.remove();
-        //     this.overlays.splice(this.overlays.indexOf(overlay), 1);
-        // }
     }
 
-    // private toggleDisplayNameVisibility() {
-    //     let content = this._getDomElements<HTMLDivElement>('#content');
-    //     if (!content || content.length === 0) return;
-    //     for (let el of content) {
-    //         el.hidden = !el.hidden;
-    //     }
-    // }
+    private isSubNodeOf(element: HTMLElement, potParent: HTMLElement): boolean {
+        if (element == potParent) return true;
+        while (element.parentElement != null) {
+            if (element.parentElement == potParent) return true;
+            element = element.parentElement;
+        }
+        return false;
+    }
 
-    private clearAllOverlays() {
-        // for(let i = this.overlays.length - 1; i > 0; i--){
-        //     this.overlays[i].element.remove();
-        //     this.overlays.splice(i, 1);
-        // }
-        for (let overlay of this.overlays) {
-            if (overlay.depth == 0) continue;
-            overlay.element.remove();
-            this.overlays.splice(this.overlays.indexOf(overlay), 1);
+
+    private buildItem(item: SideBarMenuChildWithIcon, depth: number): HTMLElement {
+        let elem = item.children?.length < 1
+            ? (<DocumentFragment>SidebarMenu.sidebarMenuItem.content.cloneNode(true)).children[0] as HTMLElement
+            : (<DocumentFragment>SidebarMenu.sidebarMenuItemWithChildren.content.cloneNode(true)).children[0] as HTMLElement;
+        let content = elem.querySelector("#content");
+        let icon = elem.querySelector("#icon");
+
+        content.innerHTML = item.displayName;
+        icon.innerHTML = item.iconIsHtml ? item.icon : "";
+
+        elem["$data"] = item;
+
+        elem.onmousedown = (e) => { this.menuItemPressed(elem, e) }
+
+        if (item.children && item.children.length > 0) {
+            elem.appendChild((<HTMLElement>SidebarMenu.expanderIcon.content.cloneNode(true)).children[0]);
+            let frac = document.createDocumentFragment();
+            for (let it of item.children) {
+                frac.appendChild(this.buildItem(it as SideBarMenuChildWithIcon, depth++));
+            }
+            let subMenu = elem.querySelector("div#subMenu") as HTMLElement;
+            subMenu.appendChild(frac);
+        }
+
+        return elem;
+    }
+
+    private menuItemPressed(element: HTMLElement, event: MouseEvent) {
+        if (!element["$data"].children || element["$data"].children.length < 1) {
+            this.sidebarItemPressed.emit(element["$data"]);
+        } else {
+            // Expand
+            let rect = element.getBoundingClientRect();
+            let subMenu = element.querySelector("div#subMenu") as HTMLElement;
+            subMenu.classList.add("sidebar-menu-visible");
+            subMenu.style.top = rect.top + "px";
+            subMenu.style.left = rect.width + "px";
         }
     }
+
+    static readonly sidebarMenuItem = html`
+        <div class="sidebar-cell" style="height: 80px;">
+            <div class="sidebar-cell-icon" id="icon"></div>
+            <div class="sidebar-cell-text" id="content"></div>
+        </div>
+    `;
+
+    static readonly sidebarMenuItemWithChildren = html`
+        <div class="sidebar-cell" style="height: 80px;">
+            <div class="sidebar-cell-icon" id="icon"></div>
+            <div class="sidebar-cell-text" id="content"></div>
+            <div id="subMenu"></div>
+        </div>
+    `;
+
+    static readonly expanderIcon = html`
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+            <g id="SVGRepo_iconCarrier"> <path d="M9 6L15 12L9 18" stroke="#FFFFFF" stroke-width="2"></path></g>
+        </svg>
+    `
 }
 customElements.define("sidebar-menu", SidebarMenu);
