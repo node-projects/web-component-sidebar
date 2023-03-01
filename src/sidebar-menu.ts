@@ -2,15 +2,41 @@ import { BaseCustomWebComponentConstructorAppendLazyReady, css, html, TypedEvent
 
 export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyReady {
     static readonly style = css`
+        :host {
+            --main-bg-color: #fefefe;
+            --main-font-color: #000;
+            --hover-bg-color: #eee;
+            --selected-font-color: #000;
+            --submenu-border-color: #eee;
+            --icon-bg-color: transparent;
+            --sidebar-cell-height: 80px;
+            --sidebar-icon-height: 60px;
+            --sidebar-cell-minwidth: 250px;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --font-size: 1.1rem;
+
+            // --main-bg-color: #21333D;
+            // --main-font-color: #fff;
+            // --hover-bg-color: #2E4A5A;
+            // --selected-font-color: #fff;
+            // --submenu-border-color: #2E4A5A;
+            // --icon-bg-color: gray;
+            // --sidebar-cell-height: 80px;
+            // --sidebar-icon-height: 60px;
+            // --sidebar-cell-minwidth: 250px;
+            // --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            // --font-size: 1.1rem;
+        }
+    
         * {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 1.1rem;
-            color: white;
+            font-family: var(--font-family);
+            font-size: var(--font-size);
+            color: var(--main-font-color);
         }
 
         nav.sidebar {
             height: calc(100% - 40px);
-            background-color: #21333D;
+            background-color: var(--main-bg-color);
             display: flex;
             flex-direction: column;
             box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
@@ -18,41 +44,38 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
 
         div.sidebar-cell {
             display: grid;
-            padding: 10px;
+            grid-template-columns: 1fr 30px;
             align-items: center;
+            gap: 15px;
+
+            padding: 10px 10px 10px 40px;
             cursor: pointer;
-            color: white;
-            grid-template-columns: 1fr 20px;
-            gap: 10px;
             white-space: nowrap;
-            height: 100px;
+            height: var(--sidebar-cell-height);
         }
 
         div.sidebar-cell.has-icon {
-            grid-template-columns: 80px 1fr 20px;
+            grid-template-columns: var(--sidebar-icon-height) 1fr 30px;
         }
 
         nav.sidebar.compact>div.sidebar-cell {
-            grid-template-columns: 80px 20px;
+            grid-template-columns: var(--sidebar-icon-height) 30px;
             gap: 0px;
         }
+
         nav.sidebar.compact>div.sidebar-cell>div.sidebar-cell-text {
             display: none;
         }
 
         div.sidebar-cell:hover {
-            background-color: #2E4A5A;
-        }
-
-        div.sidebar-cell-text {
-            padding-right: 20px;
+            background-color: var(--hover-bg-color);
         }
 
         div#subMenu {
             position: absolute;
-            background-color: #21333D;
-            border-left: 3px solid #2E4A5A;
-            flex-direction: column;
+            background-color: var(--main-bg-color);
+            border-left: 3px solid var(--submenu-border-color);
+            min-width: var(--sidebar-cell-minwidth);
             visibility: hidden;
             box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
         }
@@ -66,12 +89,17 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
             align-items: center;
             justify-content: center;
             height: 30px;
-            background-color: #21333D;
+            background-color: var(--main-bg-color);
+            color: var(--main-font-color);
             padding: 5px;
         }
 
-        #collapse.turned {
+        #collapse{
             rotate: 180deg;
+        }
+
+        #collapse.turned {
+            rotate: 0deg;
         }
 
         #collapse > * {
@@ -79,8 +107,15 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
         }
 
         #icon {
-            background-color: gray;
+            background-color: var(--icon-bg-color);
             border-radius: 10px;
+            height: var(--sidebar-icon-height);
+        }
+
+        #icon > * {
+            margin: 10%;
+            height: calc(100% - 20%);
+            width: calc(100% - 20%);
         }
     `;
 
@@ -90,17 +125,20 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
     `;
 
     static readonly properties = {
+        imagesRoot: "",
         menuItems: Object
     }
 
     public sidebarItemPressed = new TypedEvent<SideBarMenuChild>;
 
     public menuItems: SideBarMenuChildWithIcon[] = [];
+    public imagesRoot: string;
     private sidebar: HTMLDivElement;
     private collapseElem: HTMLElement;
 
 
-    private isCompact: boolean = false;
+    private _isCompact: boolean = false;
+    public isCompact = () => this.switchSidebarCompactness();
 
     constructor() {
         super();
@@ -115,7 +153,7 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
 
         this.collapseElem = this._getDomElement<HTMLElement>("collapse")
         this.collapseElem.appendChild(SidebarMenu.expanderIcon.content.cloneNode(true));
-        this.collapseElem.onpointerdown = () => this.switchBetweenSidebarCompactness();
+        this.collapseElem.onpointerdown = () => this.switchSidebarCompactness();
     }
 
     private buildMenu(menuItems: SideBarMenuChildWithIcon[], host: HTMLElement) {
@@ -165,7 +203,9 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
 
         content.innerHTML = item.displayName;
 
-        if (icon) icon.innerHTML = item.iconIsHtml ? item.icon : "";
+        if (item.icon?.length > 0) {
+            icon.appendChild(this.buildImageFromPath(item.icon));
+        }
 
         elem["$data"] = item;
 
@@ -205,9 +245,15 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
         }
     }
 
-    private switchBetweenSidebarCompactness() {
-        this.isCompact = !this.isCompact;
-        if (this.isCompact) {
+    private buildImageFromPath(iconPath: string): HTMLImageElement {
+        let image = document.createElement("img");
+        image.src = this.imagesRoot + "/" + iconPath;
+        return image;
+    }
+
+    private switchSidebarCompactness() {
+        this._isCompact = !this._isCompact;
+        if (this._isCompact) {
             this.sidebar.classList.add("compact");
             this.collapseElem.classList.add("turned");
         } else {
@@ -246,9 +292,9 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
 
     static readonly expanderIcon = html`
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+            <g id="SVGRepo_bgCarrier" stroke-width="1.5"></g>
             <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-            <g id="SVGRepo_iconCarrier"> <path d="M9 6L15 12L9 18" stroke="#FFFFFF" stroke-width="2"></path></g>
+            <g id="SVGRepo_iconCarrier"> <path d="M9 6L15 12L9 18" stroke="var(--main-font-color)" stroke-width="1.5"></path></g>
         </svg>
     `;
 
