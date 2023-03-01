@@ -14,18 +14,6 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
             --sidebar-cell-minwidth: 250px;
             --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             --font-size: 1.1rem;
-
-            // --main-bg-color: #21333D;
-            // --main-font-color: #fff;
-            // --hover-bg-color: #2E4A5A;
-            // --selected-font-color: #fff;
-            // --submenu-border-color: #2E4A5A;
-            // --icon-bg-color: gray;
-            // --sidebar-cell-height: 80px;
-            // --sidebar-icon-height: 60px;
-            // --sidebar-cell-minwidth: 250px;
-            // --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            // --font-size: 1.1rem;
         }
     
         * {
@@ -55,11 +43,11 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
         }
 
         div.sidebar-cell.has-icon {
-            grid-template-columns: var(--sidebar-icon-height) 1fr 30px;
+            grid-template-columns: var(--sidebar-icon-height) 1fr 25px;
         }
 
         nav.sidebar.compact>div.sidebar-cell {
-            grid-template-columns: var(--sidebar-icon-height) 30px;
+            grid-template-columns: var(--sidebar-icon-height) 25px;
             gap: 0px;
         }
 
@@ -131,7 +119,7 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
 
     public sidebarItemPressed = new TypedEvent<SideBarMenuChild>;
 
-    public menuItems: SideBarMenuChildWithIcon[] = [];
+    public menuItems: SideBarMenuChild[] = [];
     public imagesRoot: string;
     private sidebar: HTMLDivElement;
     private collapseElem: HTMLElement;
@@ -156,7 +144,7 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
         this.collapseElem.onpointerdown = () => this.switchSidebarCompactness();
     }
 
-    private buildMenu(menuItems: SideBarMenuChildWithIcon[], host: HTMLElement) {
+    private buildMenu(menuItems: SideBarMenuChild[], host: HTMLElement) {
         for (let item of menuItems) {
             host.appendChild(this.buildItem(item, 1))
         }
@@ -186,7 +174,7 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
         return false;
     }
 
-    private buildItem(item: SideBarMenuChildWithIcon, depth: number): HTMLElement {
+    private buildItem(item: SideBarMenuChild, depth: number): HTMLElement {
         let elem: HTMLElement;
         if (depth == 1) {
             elem = !item.children || item.children.length < 1
@@ -213,7 +201,7 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
             elem.appendChild((<HTMLElement>SidebarMenu.expanderIcon.content.cloneNode(true)).children[0]);
             let frac = document.createDocumentFragment();
             for (let it of item.children) {
-                frac.appendChild(this.buildItem(it as SideBarMenuChildWithIcon, depth + 1));
+                frac.appendChild(this.buildItem(it as SideBarMenuChild, depth + 1));
             }
             let subMenu = elem.querySelector("div#subMenu") as HTMLElement;
             subMenu["$depth"] = depth;
