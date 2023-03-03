@@ -36,7 +36,7 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
             align-items: center;
             gap: 15px;
 
-            padding: 10px 10px 10px 40px;
+            padding: 10px 10px 10px 30px;
             cursor: pointer;
             white-space: nowrap;
             height: var(--sidebar-cell-height);
