@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "./dist/sidebar-menu.js",
-  "scripts": {},
+  "scripts": {
+    "build": "tsc",
+    "release": "release-it"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lschirmbrand/web-component-sidebar.git"
