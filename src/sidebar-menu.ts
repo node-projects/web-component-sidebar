@@ -109,7 +109,7 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
 
     static readonly template = html`
         <nav id="sidebar" class="sidebar"></nav>
-        <span id="collapse"><span>
+        <span id="collapse"></span>
     `;
 
     static readonly properties = {
