@@ -1,0 +1,51 @@
+{
+    "schemaVersion": "1.0.0",
+    "readme": "README.md",
+    "modules": [
+        {
+            "kind": "javascript-module",
+            "path": "./dist/sidebar-menu.js",
+            "declarations": [
+                {
+                    "kind": "class",
+                    "description": "A generic sidebar.",
+                    "name": "SidebarMenu",
+                    "attributes": [
+                        {
+                            "name": "imagesRoot",
+                            "fieldName": "imagesRoot"
+                        },
+                        {
+                            "name": "menuItems",
+                            "fieldName": "menuItems"
+                        }
+                    ],
+                    "events": [
+                        {
+                            "name": "sidebarItemPressed",
+                            "description": "Is raised when the sidebar item was pressed. Contains the child element as parameter.",
+                            "type": {
+                                "title": "SideBarMenuChild"
+                            }
+                        }
+                    ],
+                    "superclass": {
+                        "name": "BaseCustomWebComponentConstructorAppend"
+                    },
+                    "tagName": "sidebar-menu",
+                    "customElement": true
+                }
+            ],
+            "exports": [
+                {
+                    "kind": "custom-element-definition",
+                    "name": "sidebar-menu",
+                    "declaration": {
+                        "name": "SidebarMenu",
+                        "module": "dist/sidebar-menu.js"
+                    }
+                }
+            ]
+        }
+    ]
+}
