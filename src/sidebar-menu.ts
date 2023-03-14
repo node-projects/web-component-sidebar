@@ -24,6 +24,7 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
 
         nav.sidebar {
             height: calc(100% - 40px);
+            max-height: calc(100% - 40px);
             background-color: var(--main-bg-color);
             display: flex;
             flex-direction: column;
@@ -64,12 +65,12 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
             background-color: var(--main-bg-color);
             border-left: 3px solid var(--submenu-border-color);
             min-width: var(--sidebar-cell-minwidth);
-            visibility: hidden;
+            display: none;
             box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
         }
 
         div#subMenu.sidebar-menu-visible {
-            visibility: visible;
+            display: block;
         }
 
         #collapse {
@@ -227,9 +228,16 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
             // Expand
             let rect = element.getBoundingClientRect();
             let subMenu = element.querySelector("div#subMenu") as HTMLElement;
+
             subMenu.classList.add("sidebar-menu-visible");
-            subMenu.style.top = rect.height + "px";
-            subMenu.style.left = rect.width + "px";
+
+            let subMenuRect = subMenu.getBoundingClientRect();
+            let parentRect = element.parentElement.getBoundingClientRect();
+
+            let pos = this.calculateSubMenuPosition(rect, parentRect, subMenuRect);
+            subMenu.style.top = pos.y + "px";
+            subMenu.style.left = pos.x + "px";
+            
         }
     }
 
@@ -247,6 +255,20 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
         } else {
             this.sidebar.classList.remove("compact");
             this.collapseElem.classList.remove("turned");
+        }
+    }
+
+    private calculateSubMenuPosition(elementRect: DOMRect, parentRect: DOMRect, subMenuRect: DOMRect): { x: number, y: number } {
+        if(elementRect.height + elementRect.top + subMenuRect.height < this.sidebar.getBoundingClientRect().height){
+            return {
+                y: elementRect.top - parentRect.top,
+                x: elementRect.width
+            };
+        }
+
+        return {
+            y: (elementRect.top + elementRect.height) - parentRect.top - subMenuRect.height,
+            x: elementRect.width
         }
     }
 
