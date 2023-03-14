@@ -228,7 +228,7 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
             let rect = element.getBoundingClientRect();
             let subMenu = element.querySelector("div#subMenu") as HTMLElement;
             subMenu.classList.add("sidebar-menu-visible");
-            subMenu.style.top = rect.top + "px";
+            subMenu.style.top = rect.height + "px";
             subMenu.style.left = rect.width + "px";
         }
     }
