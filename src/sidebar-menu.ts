@@ -294,4 +294,4 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
         window.removeEventListener("click", this.collapseAllMenu)
     }
 }
-customElements.define("sidebar-menu", SidebarMenu);
+customElements.define("node-projects-sidebar-menu", SidebarMenu);
