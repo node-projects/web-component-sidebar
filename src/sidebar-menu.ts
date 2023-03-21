@@ -14,6 +14,8 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
             --sidebar-cell-minwidth: 250px;
             --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             --font-size: 1.1rem;
+            --box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 0px, rgba(0, 0, 0, 0.22) 0px 10px 0px;
+            --border-radius: none;
         }
     
         * {
@@ -28,7 +30,10 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
             background-color: var(--main-bg-color);
             display: flex;
             flex-direction: column;
-            box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
+            box-shadow: var(--box-shadow);
+            border-radius: var(--border-radius);
+            position: relative;
+
         }
 
         div.sidebar-cell {
@@ -66,7 +71,7 @@ export class SidebarMenu extends BaseCustomWebComponentConstructorAppendLazyRead
             border-left: 3px solid var(--submenu-border-color);
             min-width: var(--sidebar-cell-minwidth);
             display: none;
-            box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
+            box-shadow: rgba(0, 0, 0, 0.25) 0px 0px 28px, rgba(0, 0, 0, 0.22) 0px 0px 10px;
         }
 
         div#subMenu.sidebar-menu-visible {
