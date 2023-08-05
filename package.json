@@ -1,6 +1,6 @@
 {
   "name": "@node-projects/web-component-sidebar",
-  "version": "1.0.7",
+  "version": "1.1.0",
   "description": "",
   "main": "./dist/sidebar-menu.js",
   "scripts": {
