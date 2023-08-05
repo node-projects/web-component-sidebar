@@ -32,7 +32,7 @@
                     "superclass": {
                         "name": "BaseCustomWebComponentConstructorAppend"
                     },
-                    "tagName": "sidebar-menu",
+                    "tagName": "node-projects-sidebar-menu",
                     "customElement": true
                 }
             ],
